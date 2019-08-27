@@ -1,0 +1,292 @@
+
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>ZIM Isometric (click)</title>
+
+<!-- Welcome to ZIM at http://zimjs.com - Code Interactive Media Pizzazz!             -->
+<!-- ZIM runs on the HTML Canvas powered by JavaScript and CreateJS http://createjs.com -->
+<!-- Founded by Inventor Dan Zen - http://danzen.com - Canadian New Media Award Winner     -->
+<!-- ZIM is free to use. You can donate to help improve ZIM at http://zimjs.com/donate     -->
+
+<script src="https://d309knd7es5f10.cloudfront.net/createjs_1.1_min.js"></script>
+<script src="https://d309knd7es5f10.cloudfront.net/zim_9.3.0.js"></script>
+<!-- use zimjs.com/distill for minified individual functions! -->
+<style media="screen">
+type:{
+         Label:{
+             add:true,
+             x:54, y:270,
+             color:pink,
+             backgroundColor:"ignore",
+             backing:"ignore"
+         }
+
+</style>
+<script>
+
+// SCALING OPTIONS
+// scaling can have values as follows with full being the default
+// "fit"    sets canvas and stage to dimensions and scales to fit inside window size
+// "outside"    sets canvas and stage to dimensions and scales to fit outside window size
+// "full"    sets stage to window size with no scaling
+// "tagID"    add canvas to HTML tag of ID - set to dimensions if provided - no scaling
+
+var scaling = "fit"; // this will resize to fit inside the screen dimensions
+var width = 1024;
+var height = 768;
+var color = light;
+var outerColor = dark;
+var assets = ["boutiquestore.png","boy.png","toysstore.png","cleaningshop.png", "list.png", "one.png","icon1.png","icon2.png","dad.png"];
+var path = "assets/";
+
+// as of ZIM 5.5.0 you do not need to put zim before ZIM functions and classes
+var frame = new Frame(scaling, width, height, color, outerColor, assets, path);
+frame.on("ready", function() {
+    zog("ready from ZIM Frame"); // logs in console (F12 - choose console)
+    var stage = frame.stage;
+    var stageW = frame.width;
+    var stageH = frame.height;
+
+    var details = getQueryString();
+    if(details && details.itemCount1 && details.player) {
+      var itemCount1=details.itemCount1;
+	var player = details.player;
+    }
+    else {
+      var itemCount1=9;
+	var player = "boy";
+    }
+
+    var totalcount = itemCount1;
+
+    frame.asset("list.png").loc(619, 12)
+    	.sca(.5);
+
+    new Label({
+	    text: "Collection Game",
+	    color: "blue"
+    }).pos(30, 60, stage);
+
+    new Label({
+         text: "Total Remaining:",
+	   color: grey
+    }).center().loc(568, 691);
+
+    var itemCount1 = new Label({
+         text: totalcount,
+         backing:new Rectangle(100,60,grey),
+         color:light,
+         size:50
+    }).center().loc(860, 675);
+
+    var holder = new Container();
+    var tiles = new Tile(new Rectangle(50,50,light,darker,2).centerReg(), 8, 8)
+        .rot(45)
+        .center(holder)
+    holder.sca(1.8,1).center().mov(0,50);
+
+    var tree = frame.asset("one.png")
+	    .ske(null, -20)
+	    .loc(204, 306);
+
+    var toyStore = frame.asset("toysstore.png")
+	    .sca(.3)
+	    .rot()
+	    .center()
+	    .loc(704, 148);
+
+   var boutique = frame.asset("boutiquestore.png")
+	    .sca(.1)
+	    .rot()
+	    .center()
+	    .sca(0.15,0.15)
+	    .loc(547, 372);
+
+   var clothingStore = frame.asset("cleaningshop.png")
+	    .sca(.1)
+	    .rot()
+	    .sca(0.3,0.3)
+	    .center()
+	    .loc(337, 55);
+
+    var boyObject = new Sprite(frame.asset(player + ".png"),6,1)
+		.run({time:5000,loop:2})
+		.centerReg()
+		.reg(null,90)
+		.loc(67, 431);
+
+    var boyObject1 = new Sprite(frame.asset("dad.png"),6,1);
+
+    new Label({
+         text: "Characters:",
+	   color: grey
+    }).center().loc(20, 567);
+
+    var icon1 = frame.asset("icon1.png").centerReg();
+
+    var button1 = new Button({
+	   width:100,
+	   icon: icon1,
+	   backgroundColor:frame.color,
+	   height:70,
+	   corner:5
+	}).centerReg().loc(94, 653);
+
+	var icon2 = frame.asset("icon2.png").centerReg();
+
+	var button2 = new Button({
+		width:100,
+		icon: icon2,
+		backgroundColor:frame.color,
+		height:70,
+		corner:5
+	}).centerReg().loc(250, 653);
+
+	button1.on("click", function(e) {
+		boyObject.removeFrom(stage);
+      	boyObject1.run({time:2000,loop:true})
+		  .centerReg()
+		  .reg(null,110)
+		  .loc(67, 431);
+		player = "dad";
+
+
+        var damp = new ProportionDamp(0, stageH, .8, 1.3, .5).immediate(boyObject1.y);
+        boyObject1.sca(damp.convert(boyObject1.y));
+        Ticker.add(function() {boyObject1.sca(damp.convert(boyObject1.y));});
+
+        tiles.on("click", function(e) {
+            var point = tiles.localToGlobal(e.target.x, e.target.y);
+            boyObject1.animate({
+                obj:{x:point.x, y:point.y},
+                time:500,
+                override:false,
+                call: function () {
+	            if (e.target.x == 125 && e.target.y == 325) {
+	              boyObject1.animate({
+	                	obj:{x:tiles.x+185, y:tiles.y+500},
+	                	time:500,
+	                	override:false
+	              });
+	            } else if (e.target.x == 325 && e.target.y == 225) {
+	                e.target.removeFrom();
+	                zgo("boutique.html?itemCount1=" + itemCount1.text + "&&player=" + player);
+	            }
+	            else if (e.target.x == 275 && e.target.y == 75) {
+	                e.target.removeFrom();
+	                zgo("ToyStore.html?itemCount1=" + itemCount1.text + "&&player=" + player);
+	           }
+	           else if (e.target.x == 75 && e.target.y == 125) {
+	                e.target.removeFrom();
+	                zgo("DryCleaner.html?itemCount1=" + itemCount1.text + "&&player=" + player);
+	           }
+        	   }
+      	});
+		stage.udpate();
+        });
+
+        var damp = new ProportionDamp(0, stageH, .8, 1.3, .5).immediate(boyObject1.y);
+        boyObject1.sca(damp.convert(boyObject1.y));
+        Ticker.add(function() {boyObject1.sca(damp.convert(boyObject1.y));});
+
+	});
+   // stage.update();
+	button2.on("click", function(e){
+		boyObject1.removeFrom(stage);
+		boyObject.run({time:2000,loop:true})
+			.centerReg()
+			.reg(null,90)
+			.loc(67, 431);
+		player = "boy";
+
+      tiles.on("click", function(e) {
+          var point = tiles.localToGlobal(e.target.x, e.target.y);
+          zog(e.target.x, e.target.y)
+          boyObject.animate({
+              obj:{x:point.x, y:point.y},
+              time:500,
+              override:false,
+              call: function () {
+  			  if (e.target.x == 125 && e.target.y == 325) {
+  				  zog("tree")
+  				  boyObject.animate({
+  					  obj:{x:tiles.x+185, y:tiles.y+500},
+  					  time:500,
+              			  override:false
+  				  });
+  			  } else if (e.target.x == 325 && e.target.y == 225) {
+              		e.target.removeFrom();
+              		zgo("boutique.html?itemCount1=" + itemCount1.text + "&&player=" + player);
+          		  }
+          		  else if (e.target.x == 275 && e.target.y == 75) {
+              		e.target.removeFrom();
+              		zgo("ToyStore.html?itemCount1=" + itemCount1.text + "&&player=" + player);
+         		  }
+         		  else if (e.target.x == 75 && e.target.y == 125) {
+              		e.target.removeFrom();
+              		zgo("DryCleaner.html?itemCount1=" + itemCount1.text + "&&player=" + player);
+         		  }
+      	  }
+    	     });
+    	stage.update();
+      });
+
+	var damp = new ProportionDamp(0, stageH, .8, 1.3, .5).immediate(boyObject.y);
+	boyObject.sca(damp.convert(boyObject.y));
+	Ticker.add(function() {boyObject.sca(damp.convert(boyObject.y));});
+  });
+
+    tiles.on("mouseover", function(e) {
+        e.target.color = grey;
+        stage.update();
+    });
+    tiles.on("mouseout", function(e) {
+        e.target.color = light;
+        stage.update();
+    });
+    tiles.on("click", function(e) {
+        var point = tiles.localToGlobal(e.target.x, e.target.y);
+        zog(e.target.x, e.target.y)
+        boyObject.animate({
+            obj:{x:point.x, y:point.y},
+            time:500,
+            override:false,
+            call: function () {
+		  if (e.target.x == 125 && e.target.y == 325) {
+			  boyObject.animate({
+				  obj:{x:tiles.x+185, y:tiles.y+500},
+				  time:500,
+      			  override:false
+			  });
+		  } else if (e.target.x == 325 && e.target.y == 225) {
+      		e.target.removeFrom();
+      		zgo("boutique.html?itemCount1=" + itemCount1.text + "&&player=" + player);
+  		  }
+  		  else if (e.target.x == 275 && e.target.y == 75) {
+      		e.target.removeFrom();
+      		zgo("ToyStore.html?itemCount1=" + itemCount1.text + "&&player=" + player);
+ 		  }
+ 		  else if (e.target.x == 75 && e.target.y == 125) {
+      		e.target.removeFrom();
+      		zgo("DryCleaner.html?itemCount1=" + itemCount1.text + "&&player=" + player);
+ 		  }
+    		}
+  	  });
+    });
+
+    stage.update(); // this is needed to show any changes
+
+}); // end of ready
+
+</script>
+
+<meta name="viewport" content="width=device-width, user-scalable=no" />
+
+</head>
+
+<body>
+<!-- canvas with id="myCanvas" is made by zim Frame -->
+</body>
+</html>

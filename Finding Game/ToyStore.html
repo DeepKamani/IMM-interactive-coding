@@ -1,0 +1,258 @@
+
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>ZIM Isometric (click)</title>
+
+<!-- Welcome to ZIM at http://zimjs.com - Code Interactive Media Pizzazz!             -->
+<!-- ZIM runs on the HTML Canvas powered by JavaScript and CreateJS http://createjs.com -->
+<!-- Founded by Inventor Dan Zen - http://danzen.com - Canadian New Media Award Winner     -->
+<!-- ZIM is free to use. You can donate to help improve ZIM at http://zimjs.com/donate     -->
+
+<script src="https://d309knd7es5f10.cloudfront.net/createjs_1.1_min.js"></script>
+<script src="https://d309knd7es5f10.cloudfront.net/zim_9.3.0.js"></script>
+<!-- use zimjs.com/distill for minified individual functions! -->
+
+<script>
+
+// SCALING OPTIONS
+// scaling can have values as follows with full being the default
+// "fit"    sets canvas and stage to dimensions and scales to fit inside window size
+// "outside"    sets canvas and stage to dimensions and scales to fit outside window size
+// "full"    sets stage to window size with no scaling
+// "tagID"    add canvas to HTML tag of ID - set to dimensions if provided - no scaling
+
+var scaling = "fit"; // this will resize to fit inside the screen dimensions
+var width = 1024;
+var height = 768;
+var color = light;
+var outerColor = dark;
+var assets = ["bear.png", "duck.png", "bike.png", "hammer.png", "yoyo.png","cannon.png", "boy.png", "dad.png", "exit.png"];
+var path = "assets/";
+
+// as of ZIM 5.5.0 you do not need to put zim before ZIM functions and classes
+var frame = new Frame(scaling, width, height, color, outerColor, assets, path);
+frame.on("ready", function() {
+    zog("ready from ZIM Frame"); // logs in console (F12 - choose console)
+    var stage = frame.stage;
+    var stageW = frame.width;
+    var stageH = frame.height;
+
+    var details = getQueryString();
+    if(details && details.itemCount1 && details.player){
+      var itemCount1=details.itemCount1;
+	var player = details.player;
+    }
+    else {
+      var itemCount1=9;
+	var player = "boy";
+    }
+
+    var totalcount = itemCount1;
+    var count = 3;
+    var label = false;
+
+     new Label({
+		text: "Toy Store",
+		color: "blue"
+	}).pos(591, 103).sca(.9,1).rot(5);
+
+    new Label({
+	 text: "Total Remaining:",
+	 color: grey
+   }).center().loc(568, 691);
+
+    var itemCount1 = new Label({
+         text: totalcount,
+         backing:new Rectangle(100,60,grey),
+         color:light,
+         size:50
+    }).center().loc(860, 675);
+
+    new Label({
+          text: "Items Left:",
+ 	   color: grey,
+ 	   size: 30
+    }).center().loc(285, 26);
+
+    var itemCount = new Label({
+         text: count,
+         backing:new Rectangle(100,60,grey),
+         color:light,
+         size:50
+    }).center().loc(436, 14);
+
+    var holder = new Container();
+
+    var tiles = new Tile(new Rectangle(50,50,light,darker,2).centerReg(), 8, 8)
+        .rot(45)
+        .center(holder);
+
+   var exit = tiles.getChildAt(63);
+   exit.color = red;
+   frame.asset("exit.png")
+   	.sca(.1, .1)
+	.ske(null, 30)
+	.loc(411, 675);
+
+    holder.sca(2,1).center().mov(0,50);
+
+    var itemList = new List(300, 200, ['Bear', 'Duck', 'Bike'])
+      .sca(.8,.8)
+	.centerReg()
+	.loc(167, 155)
+	.ske(null,-30);
+
+    var boyObject = new Sprite(frame.asset(player + ".png"),6,1)
+      .run({time:2000, loop:true})
+	.centerReg()
+	.reg(null,90)
+	.loc(20, 440);
+
+    var item1 = frame.asset("bear.png")
+    	.sca(.5)
+      .rot(30)
+      .loc(645, 211);
+
+    var item2 = frame.asset("duck.png")
+    	 .sca(.5)
+       .rot(30)
+       .center();
+
+   var item3 = frame.asset("bike.png")
+      .sca(.5)
+	.loc(903, 434);
+
+   var item4 = frame.asset("hammer.png")
+    	.sca(.4)
+      .rot(30)
+      .loc(370, 225);
+
+   var item5 = frame.asset("cannon.png")
+    .sca(.5)
+    .rot(30)
+    .loc(289, 465);
+
+   var item6 = frame.asset("yoyo.png")
+    	.sca(.5)
+      .rot(30)
+      .loc(645, 355);
+
+    item1.collected=false;
+    item2.collected=false;
+    item3.collected=false;
+
+     var items = new Rectangle({
+          width:100,
+          height: 230,
+          borderColor: blue
+     }).center().loc(857, 32);
+
+    tiles.on("mouseover", function(e) {
+        e.target.color = grey;
+	  exit.color = red;
+        stage.update();
+    });
+
+    tiles.on("mouseout", function(e) {
+        e.target.color = light;
+        stage.update();
+    });
+
+    tiles.on("click", function(e) {
+        var point = tiles.localToGlobal(e.target.x, e.target.y);
+        boyObject.animate({
+            obj:{x:point.x, y:point.y},
+            time:500,
+		override: false,
+            call: function () {
+              if (item1.collected == false && e.target.x == 125 && e.target.y == 25) {
+                item1.collected = true;
+                item1.animate({
+                       props: [
+                            // up
+                             {props: {y:170}, time: 700},
+                            //across
+                             {props: {x: 900}, time: 700}
+                       ]
+                  });
+			new Rectangle(110,1).loc(118, 123).ske(null, -30)
+                  count--;
+                  totalcount--;
+             }
+             if (item2.collected == false && e.target.x == 175 && e.target.y == 175) {
+                item2.collected = true;
+                item2.animate({
+                      props: [
+                           // up
+                            {props: {y:100}, time: 700},
+                           //across
+                            {props: {x: 900}, time: 700}
+                      ]
+                 });
+		     new Rectangle(110,1).loc(118, 155).ske(null, -30)
+                 count--;
+                 totalcount--;
+             }
+            if (item3.collected == false && e.target.x == 375 && e.target.y == 75) {
+                item3.collected = true;
+                item3.animate({
+                   props: [
+                        // up
+                        {props: {y:40}, time: 700},
+                        //across
+                        {props: {x: 870}, time: 700}
+                   ]
+              });
+		  new Rectangle(110,1).loc(118, 187).ske(null, -30)
+              count--;
+              totalcount--;
+           }
+           if (e.target.x == 375 && e.target.y == 375) {
+              zgo("isometric3.html?itemCount1=" + itemCount1.text + "&&player=" + player);
+            }
+
+	  itemCount1.text = totalcount;
+        itemCount.text = count;
+        if (label == false && count == 0) {
+		label = true;
+            items.borderColor = "green";
+             new Label({
+			 text: "Level Completed",
+			 color: "blue"
+		 })
+            .loc(268, 363)
+            .animate({
+                 props: {scale: 2},
+                 ease: "linear"
+            });
+        }
+
+  	 if (totalcount == 0) {
+  	    zgo("End.html");
+       }
+     }
+   });
+    stage.update();
+});
+
+     // optional scaling
+     var damp = new ProportionDamp(0, stageH, .8, 1.3, .5).immediate(boyObject.y);
+     boyObject.sca(damp.convert(boyObject.y));
+     Ticker.add(function() {boyObject.sca(damp.convert(boyObject.y));});
+
+     stage.update(); // this is needed to show any changes
+
+}); // end of ready
+
+</script>
+
+<meta name="viewport" content="width=device-width, user-scalable=no" />
+
+</head>
+
+<body>
+<!-- canvas with id="myCanvas" is made by zim Frame -->
+</body>
+</html>
