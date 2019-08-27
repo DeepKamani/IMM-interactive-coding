@@ -1,0 +1,141 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>ZIM Frame - Fit Template</title>
+
+<!-- Welcome to ZIM at https://zimjs.com - Code Creativity!                              -->
+<!-- ZIM runs on the HTML Canvas powered by JavaScript and CreateJS https://createjs.com -->
+<!-- Founded by Inventor Dan Zen - http://danzen.com - Canadian New Media Award Winner   -->
+<!-- ZIM is free to use. You can donate to help improve ZIM at https://zimjs.com/donate  -->
+
+<script src="https://d309knd7es5f10.cloudfront.net/createjs_1.1_min.js"></script>
+<script src="https://d309knd7es5f10.cloudfront.net/zim_10.0.1.js"></script>
+<!-- use zimjs.com/distill for minified individual functions! -->
+
+<script>
+
+
+  // SCALING OPTIONS
+  // scaling can have values as follows with full being the default
+  // "fit"	sets canvas and stage to dimensions and scales to fit inside window size
+  // "outside"	sets canvas and stage to dimensions and scales to fit outside window size
+  // "full"	sets stage to window size with no scaling
+  // "tagID"	add canvas to HTML tag of ID - set to dimensions if provided - no scaling
+
+  // as of ZIM 5.5.0 you do not need to put zim before ZIM functions and classes
+  var frame = new Frame();
+  frame.on("ready", function() {
+      zog("ready from ZIM Frame"); // logs in console (F12 - choose console)
+
+      var stage = frame.stage;
+      var stageW = frame.width;
+      var stageH = frame.height;
+      frame.color = frame.dark;
+
+      // see http://zimjs.com/code/learn.html for video and code tutorials
+      // see http://zimjs.com/code/docs.html for documentation
+      // see http://zimjs.com/code/bits.html for 64 Interactive Media techniques
+
+  	// ZIM VR
+  	// http://zimjs.com/vr.html
+  	// Takes content and displays it in left and right channels with position shift to look 3D.
+  	// This example is to be viewed in a VR headset that uses a mobile phone.
+  	// Have a good read over the docs at http://zimjs.com/code/docs.html?item=vr
+  	// On the PC, the content can be swiped for testing - but the visual effect is obviously not the same.
+  	// You can turn on the VR adjuster to help you bring the images closer together
+  	// so that you can use the cross-eyed technique to get a 3D effect.
+
+  	// PROPORTION - not really part of VR - just using to set depths and scales to circles
+      // we will have six circles indexed 0 - 5
+      // the 0 circle is the big orange one and the 5 circle is the small dark grey one
+      // 0 circle will animate to 20 depth which is positive coming out of the screen (which is at 0)
+      // 5 circle will animate to 5 depth so much less out of the screen
+      // we will also animate the scale up to 2.1 for the outer circle and 1.2 for the inner circle
+      // the rest of the circles animate proportionally between these bounds for both depth and scale
+  	// Proportion lets us do this without thinking:
+  	// baseMin, baseMax, targetMin, targetMax, factor, targetRound
+      var depth = new Proportion(0, 5, 20, 5);
+      var size = new Proportion(0, 5, 2.1, 1.2);
+
+      // Prepare content
+  	// put inside one container with everything as if there is no depth shifting
+  	// keep content regX at 0 - which is the default - so do not centerReg() for instance
+      var content = new Container(stageW/2, stageH); // although it is okay to go outside these bounds
+      var circles = frame.makeCircles(50, true) // outer radius and true means to make the circles individual Circle objects rather than one shape
+          .centerReg(content);
+      var label = new Label({
+          text:"ZIM VIRTUAL REALITY",
+          size:20,
+          color:frame.light
+      })
+          .centerReg(content, 0)
+          .cache()
+          .pos(null, stageH*.2)
+          .dep(0); // screen depth
+
+      // loop through the circles and give them depths
+      // we can start them off in 3D already by giving them different starting depths
+      // but we will start them at 0 and animate their depths
+      loop(circles, function(circle, i, total) {
+          // circle.dep((total-i)*3);
+          circle.dep(0);
+      });
+
+      // content, angle, distance, parallax, parallaxAngle, damp, parallaxDamp, startAngle, negativeParallax, boundaryMarkers, swiper, holder
+      var vr = new VR({
+  		content:content,
+  		angle:150,
+  		distance:400,
+  		parallax:3,
+  		parallaxAngle:60,
+  		boundaryMarkers:true,
+  		swiper:true
+  	}).center(stage);
+
+      // optionally animate the circles - the text is child 0
+      loop(vr.contentLeft.getChildAt(1), animateCircle);
+      loop(vr.contentRight.getChildAt(1), animateCircle);
+      function animateCircle(circle, i) {
+          circle.animate({
+              obj:{depth:depth.convert(i), scale:size.convert(i)},
+              time:3000,
+              rewind:true,
+              loop:true
+          });
+      }
+
+      frame.on("resize", function(){
+          vr.resize();
+      });
+
+      // timeout(1000, function() {vr.remove(label)});
+      // timeout(1000, function() {vr.position(circles.getChildAt(2), 50);});
+
+      // stage.on("stagemousedown", function() {
+      //     vr.showAdjuster();
+      // });
+
+      vr.on("boundaryout", function(e) {
+  		frame.color = frame.yellow;
+      });
+
+      vr.on("boundaryin", function() {
+          frame.color = frame.dark;
+      });
+
+      // stage.update();
+
+  }); // end of ready
+
+
+</script>
+
+<meta name="viewport" content="width=device-width, user-scalable=no" />
+
+</head>
+
+<body>
+<!-- canvas with id="myCanvas" is made by zim Frame -->
+</body>
+</html>

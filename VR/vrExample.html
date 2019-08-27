@@ -1,0 +1,379 @@
+zim.VR = function (content, angle, distance, parallax, parallaxAngle, damp, parallaxDamp, startAngle, negativeParallax, boundaryMarkers, swiper, holder) {
+        var sig = "content, angle, distance, parallax, parallaxAngle, damp, parallaxDamp, startAngle, negativeParallax, boundaryMarkers, swiper, holder";
+        var duo; if (duo = zob(zim.VR, arguments, sig, this)) return duo;
+
+        this.type = "VR";
+        if (!zimDefaultFrame) {if (zon) zog("zim.VR() - please use ZIM Frame"); return;}
+        var frame = zimDefaultFrame;
+        if (zot(holder) || !holder.getBounds || !holder.getBounds().width) var holder = frame.stage;
+        if (zot(angle)) angle = 0;
+        if (zot(distance)) distance = 100;
+        if (zot(damp)) damp = .5;
+        if (zot(parallax)) parallax = 0;
+        if (zot(parallaxAngle)) parallaxAngle = 60; // parallax operates to 30 degrees on each side of object
+        if (zot(parallaxDamp)) parallaxDamp = .1;
+        if (zot(startAngle)) startAngle = 0;
+        if (zot(negativeParallax)) negativeParallax = false;
+        if (zot(boundaryMarkers)) boundaryMarkers = true;
+	if (zot(swiper)) swiper = true;
+        this.angle = angle;
+        this.currentAngle = startAngle;
+	if (zim.mobile()) swiper = false;
+
+        var that = this;
+
+        var holderW = holder.width;
+        var holderH = holder.height;
+        that.zimContainer_constructor();
+        var left = that.left = new zim.Container(holderW/2, holderH, null, null, false);
+        var backing = new zim.Rectangle(holderW/2, holderH, "rgba(0,0,0,.01)", null, null, null, null, false);
+        left.addChild(backing);
+        var right = that.right = left.clone();
+        that.addChild(left, right);
+        right.x = holderW/2;
+
+        var contentLeft = that.contentLeft = that.content = content;
+        var contentRight = that.contentRight = content.clone();
+        if (startAngle != 0) var startAngleTimeout = setTimeout(addContent, 100);
+        else addContent();
+        function addContent() {
+            contentLeft.addTo(left, null, false).setMask(left.getChildAt(0)).pos({y:(holder.height-contentLeft.height)/2, reg:true});
+            contentRight.addTo(right, null, false).setMask(right.getChildAt(0)).pos({y:(holder.height-contentLeft.height)/2, reg:true});
+        };
+
+        var leftVR = []; // lists of eligable containers
+        var rightVR = [];
+        function copyDepth(left, right, registerLeft, registerRight) {
+            left.vrMatch = right;
+            right.vrMatch = left;
+            if (left.cacheCanvas) right.cache();
+            if (left.dep && !zot(left.depth)) {
+                leftVR.push(left);
+                rightVR.push(right);
+                if (!zot(registerLeft)) registerLeft.push(left);
+                if (!zot(registerRight)) registerRight.push(right);
+                right.dep(left.depth);
+            }
+            // recursive
+            loop(left, function(left, i){
+                copyDepth(left, right.getChildAt(i), registerLeft, registerRight);
+            });
+        }
+        copyDepth(contentLeft, contentRight);
+
+        function setDepth(list, channel) {
+            loop(list, function(container) {
+                container.vrChannel = channel;
+                container.vrStartX = container.x;
+                if (angle != 0 && distance != 0) {
+                    container.vrAngle = angle;
+                    container.vrDistance = distance;
+                }
+                if (parallax != 0 && distance != 0) {
+                    container.vrParallax = parallax/100;
+                    container.vrParallaxDistance = 0;
+                    if (angle != 0) container.vrParallaxDamp = new zim.Damp(0, parallaxDamp);
+                }
+                container.dep(container.depth);
+            });
+        }
+        setDepth(leftVR, "left");
+        setDepth(rightVR, "right");
+
+        if (angle != 0 && distance != 0) {
+            // overall motion of content due to head turn
+            var pd = new zim.Damp(180+startAngle, damp);
+            pd.immediate(180+startAngle);
+		var minCheck = false;
+		var maxCheck = false;
+            frame.on("deviceorientation", function(e) {
+                moveVR(pd.convert((e.rotation.z > 180 ? -180 : 180) + e.rotation.z + startAngle)-180);
+		});
+		function moveVR(a) {
+			that.currentAngle = a;
+                var d = -that.currentAngle * distance / angle;
+                that.contentLeft.x = d;
+                that.contentRight.x = d;
+			if (Math.round(that.currentAngle) <= -angle/2 && !minCheck) {
+				var ev = new createjs.Event("boundaryout");
+				ev.boundary = "left";
+				minCheck = true;
+				that.dispatchEvent(ev);
+			} else if (Math.round(that.currentAngle) >= angle/2 && !maxCheck) {
+				var ev = new createjs.Event("boundaryout");
+				ev.boundary = "right";
+				maxCheck = true;
+				that.dispatchEvent(ev);
+			} else if (Math.round(that.currentAngle) > -angle/2 && Math.round(that.currentAngle) < angle/2) {
+				var ev = new createjs.Event("boundaryin");
+				if (minCheck) {
+					ev.boundary = "left";
+					that.dispatchEvent(ev);
+					minCheck = false;
+				} else if (maxCheck) {
+					ev.boundary = "right";
+					that.dispatchEvent(ev);
+					maxCheck = false;
+				}
+			}
+            }
+            zim.Ticker.always();
+
+            function calculateDistance(container) {
+                var point = container.parent.localToLocal(container.vrStartX, 0, holder);
+                var d = container.vrParallaxDamp.convert(container.vrChannel == "left" ? that.contentLeft.x + point.x - holderW / 4 : that.contentRight.x + point.x - holderW / 2 - holderW / 4);
+                if (container.depth <= 0 && !negativeParallax) d = 0;
+                container.vrParallaxDistance = Math.max(-distance/angle*parallaxAngle/2, Math.min(distance/angle*parallaxAngle/2, d));
+                container.dep(container.depth);
+            }
+        }
+        if (parallax != 0 && distance != 0) {
+            var parallaxPD = new zim.ProportionDamp(180-parallaxAngle/2, 180+parallaxAngle/2, -parallaxAngle/2, parallaxAngle/2, parallaxDamp);
+		parallaxPD.immediate(180);
+            if (angle == 0) {
+                function calculateDistance2(container, a) {
+                    container.vrParallaxDistance = (container.depth <= 0 && !negativeParallax) ? 0 : a;
+                    container.dep(container.depth); // set the depth again now that the parallax Distance has changed
+                }
+            }
+            frame.on("deviceorientation", function(e) {
+			// only parallax based on distance, parallax factor and parallax angle - no content movement
+			var a = 0;
+			if (angle == 0 && parallax !=0 && distance !=0) a = parallaxPD.convert((e.rotation.z > 180 ? -180 : 180) + e.rotation.z);
+			doParallax(a);
+		});
+
+		function doParallax(a) {
+                if (angle != 0 && distance != 0) { // movement and parallax
+                    // content movement so base parallax on distance of content from center of view
+                    loop(leftVR, calculateDistance);
+                    loop(rightVR, calculateDistance);
+                } else { // only parallax
+                    loop(leftVR, function(container) {calculateDistance2(container, a)})
+                    loop(rightVR, function(container) {calculateDistance2(container, a)});
+                }
+            }
+            zim.Ticker.always();
+        }
+
+	if (swiper && distance !=0 && (angle !=0 || parallax != 0)) {
+		that.added(function() {
+			var swipeObject = {swipeAngle:0};
+			var swiper = that.swiper = new zim.Swiper({
+				swipeOn:that,
+				target:swipeObject,
+				property:"swipeAngle",
+				sensitivity:.2,
+				damp:.05,
+				factor:-1,
+				min:-330,
+				max:330
+			});
+			Ticker.add(function() {
+				// if (swipeObject.swipeAngle > 180) {
+				// 	swipeObject.swipeAngle -= 360;
+				// 	swiper.immediate(swipeObject.swipeAngle);
+				// 	parallaxD.immediate(swipeObject.swipeAngle);
+				// 	pd.immediate(swipeObject.swipeAngle);
+				// }
+				// if (swipeObject.swipeAngle < -180) {
+				// 	swipeObject.swipeAngle += 360;
+				// 	swiper.immediate(swipeObject.swipeAngle);
+				// 	parallaxD.immediate(swipeObject.swipeAngle);
+				// 	pd.immediate(swipeObject.swipeAngle);
+				// }
+				if (angle != 0 && distance != 0) moveVR(swipeObject.swipeAngle);
+				if (parallax != 0 && distance != 0) doParallax(parallaxPD.convert(swipeObject.swipeAngle+180));
+			});
+		});
+	}
+
+
+	// ADJUSTER INTERFACE
+	// localStorage.clear();
+	var eyeAdjust = localStorage && localStorage.zimEyeAdjust ? Number(localStorage.zimEyeAdjust) : 0;
+	var lastEyeAdjust = eyeAdjust;
+	var adjusterCheck = false;
+	contentLeft.startRegX = contentLeft.regX;
+	contentRight.startRegX = contentRight.regX;
+	var adjuster = this.adjuster = new zim.Container(800, 300, null, null, false);
+	var backing = adjuster.backing = new zim.Rectangle(adjuster.width, adjuster.height, zim.lighter, null, null, null, null, false).center(adjuster).alp(1).sha("rgba(0,0,0,.2)", 0, 0, 30);
+	var backing2 = adjuster.strip = new zim.Rectangle(adjuster.width, adjuster.height/3, zim.white, null, null, null, null, false).center(adjuster).alp(1);
+	var label = adjuster.label = new zim.Label({
+		text:"slide to adjust center of left and right",
+		size:28,
+		color:zim.dark,
+		align:"center",
+		valign:"center"
+	}).center(adjuster).pos({y:50, reg:true});
+
+	var close = adjuster.close = new zim.Rectangle(50,50,zim.light, null, null, null, null, false).addTo(adjuster).mov(adjuster.width-70, 26)
+	var ex = new zim.Shape(-40,-40,80,80,null,false);
+	ex.graphics.f(zim.dark).p("AmJEVIEUkTIkXkWIB4h5IEWEYIETkTIB4B3IkTESIEQERIh4B4IkRkRIkSEVg"); // width about 90 reg in middle
+	ex.center(close).sca(.3);
+	close.cursor = "pointer";
+	close.on((!zns?ACTIONEVENT=="mousedown":zim.ACTIONEVENT=="mousedown")?"mousedown":"click", function() {
+		that.hideAdjuster();
+		slider.currentValue = (slider.max - slider.min) / 2 + lastEyeAdjust;
+		that.dispatchEvent("closed");
+	});
+
+	var dotLeft = new zim.Circle(30, zim.dark, null, null, null, null, false).center(adjuster).pos({x:adjuster.width/4, reg:true})
+	dotLeft.shape.alpha = .2
+	new zim.Circle(12, zim.dark, null, null, null, null, false).center(dotLeft)
+	var dotRight = new zim.Circle(30, zim.dark, null, null, null, null, false).center(adjuster).pos({x:adjuster.width/4*3, reg:true})
+	dotRight.shape.alpha = .2
+	new zim.Circle(12, zim.dark, null, null, null, null, false).center(dotRight)
+	var slider = adjuster.slider = new zim.Slider({
+		min:0, max:30, step:1, useTicks:true, style:false
+	}).centerReg(adjuster).pos({y:adjuster.height-40, reg:true});
+	slider.currentValue = (slider.max - slider.min) / 2 + eyeAdjust;
+	var leftP = new zim.Proportion(slider.min, slider.max, dotLeft.x-adjuster.width/4, dotLeft.x+adjuster.width/4, -1);
+	var rightP = new zim.Proportion(slider.min, slider.max, dotRight.x-adjuster.width/4, dotRight.x+adjuster.width/4);
+	slider.on("change", function() {
+		dotLeft.x = leftP.convert(slider.currentValue);
+		dotRight.x = rightP.convert(slider.currentValue);
+	})
+	new zim.Label("closer", 24, null, zim.silver).centerReg(adjuster).pos({x:slider.x - 220, y:slider.y, reg:true});
+	new zim.Label("farther", 24, null, zim.silver).centerReg(adjuster).pos({x:slider.x + 220, y:slider.y, reg:true});
+	var ok = that.ok = new zim.Button({
+		label:"OK",
+		width:90,
+		height:60,
+		corner:0,
+		backgroundColor:zim.blue,
+		rollBackgroundColor:zim.green,
+		shadowColor:-1,
+		style:false
+	}).centerReg(adjuster).sca(.8).pos({x:adjuster.width-58, y:slider.y, reg:true});
+
+	ok.on((!zns?ACTIONEVENT=="mousedown":zim.ACTIONEVENT=="mousedown")?"mousedown":"click", function() {
+		if (localStorage) localStorage.zimEyeAdjust = slider.currentValue - (slider.max - slider.min) / 2;
+		setReg();
+		that.hideAdjuster();
+		that.dispatchEvent("saved");
+		that.dispatchEvent("closed");
+	});
+
+	var zero = that.zero = new zim.Button({
+		label:">|<",
+		width:90,
+		height:60,
+		corner:0,
+		backgroundColor:zim.yellow,
+		rollBackgroundColor:zim.green,
+		shadowColor:-1,
+		style:false
+	}).centerReg(adjuster).sca(.8).pos({x:58, y:slider.y, reg:true});
+	zero.on((!zns?ACTIONEVENT=="mousedown":zim.ACTIONEVENT=="mousedown")?"mousedown":"click", function() {
+		slider.currentValue = (slider.max - slider.min) / 2;
+		dotLeft.x = leftP.convert(slider.currentValue);
+		dotRight.x = rightP.convert(slider.currentValue);
+	});
+
+	var adjusterP = new zim.Proportion(0, 30, -holder.width/4, holder.width/4);
+	function setReg() {
+		// shift the registration point of the content to accommodate eye distance adjust
+		var change = adjusterP.convert(slider.currentValue);
+		contentLeft.regX = contentLeft.startRegX + change;
+		contentRight.regX = contentRight.startRegX - change;
+	}
+	setReg();
+
+	this.showAdjuster = function() {
+		if (adjusterCheck) return that;
+		adjusterCheck = true;
+		dotLeft.x = leftP.convert(slider.currentValue);
+		dotRight.x = rightP.convert(slider.currentValue);
+		lastEyeAdjust = slider.currentValue - (slider.max - slider.min) / 2;
+		adjuster.scaleTo(holder).center(this);
+		holder.stage.update();
+	}
+
+	this.hideAdjuster = function() {
+		if (!adjusterCheck) return that;
+		adjusterCheck = false;
+		adjuster.removeFrom(this);
+		holder.stage.update();
+	}
+
+        this.position = function(item, x, y) {
+		posit(item);
+		posit(item.vrMatch);
+		function posit(it) {
+			it.vrStartX = x;
+            if (it.vrParallaxDamp) it.vrParallaxDamp.immediate(x);
+            it.mov(x, y);
+		}
+            return item;
+        }
+
+        this.register = function(item) {
+            // object must be added to content container
+            if (!item.parent || !item.parent.vrMatch) {
+                if (zon) {zog("ZIM VR() - please only register objects already inside content container")}
+                return item;
+            }
+		var itemRight = item.clone().addTo(item.parent.vrMatch);
+
+            var registerLeft = [];
+            var registerRight = [];
+            copyDepth(item, itemRight, registerLeft, registerRight);
+            setDepth(registerLeft, "left");
+            setDepth(registerRight, "right");
+            return item;
+        }
+
+        if (angle != 0 && distance != 0 && boundaryMarkers) {
+            that.boundaryRight = new zim.Container({style:false});
+            new zim.Circle(24, zim.light, null, null, null, null, false).addTo(that.boundaryRight).dep(-2);
+            new zim.Triangle(16,16,16,zim.yellow, zim.grey,null,null,-3,null,false).rot(-90).center(that.boundaryRight).dep(-6);
+            that.boundaryRight.center(content).mov(distance/2+24);
+            that.boundaryLeft = new zim.Container({style:false});
+            new zim.Circle(24, zim.light, null, null, null, null, false).addTo(that.boundaryLeft).dep(-2);
+            new zim.Triangle(16,16,16,zim.yellow, zim.grey,null,null,-3,null,false).rot(90).center(that.boundaryLeft).dep(-6);
+            that.boundaryLeft.center(content).mov(-distance/2-24);
+            that.register(that.boundaryRight);
+            that.register(that.boundaryLeft);
+        }
+
+        function removeItem(item) {
+            var index = leftVR.indexOf(item);
+            if (leftVR.indexOf(item) >= 0) {
+                leftVR.splice(index, 1);
+                rightVR.splice(index, 1);
+            }
+            loop(item, function(inside) {
+                removeItem(inside);
+            });
+        }
+
+        this.remove = function(items) {
+            // call to remove an item from VR
+            // Note: arguments is an object with properties matching the index of the argument
+            loop(arguments, function(index, item) {
+                if (!content.contains(item)) return;
+                removeItem(item);
+                item.parent.removeChild(item);
+                item.vrMatch.parent.removeChild(item.vrMatch);
+            });
+            return that;
+        }
+
+        this.resize = function() {
+            holderW = holder.width;
+            holderH = holder.height;
+            left.getChildAt(0).widthOnly = right.getChildAt(0).widthOnly = holderW/2;
+            left.getChildAt(0).heightOnly = right.getChildAt(0).heightOnly = holderH;
+            right.x = holderW/2;
+            left.setBounds(0,0,holderW/2,holderH);
+            right.setBounds(0,0,holderW/2,holderH);
+            if (startAngle != 0) {
+                clearTimeout(startAngleTimeout);
+                startAngleTimeout = setTimeout(addContent, 100);
+            }
+            else addContent();
+		adjuster.scaleTo(holder).center(this, null, false);
+        }
+    }
+    zim.extend(zim.VR, zim.Container, "clone", "zimContainer", false);
