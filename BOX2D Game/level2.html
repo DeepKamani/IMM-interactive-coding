@@ -1,0 +1,241 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>game</title>
+
+<!-- Welcome to ZIM at https://zimjs.com - Code Creativity!              	        -->
+<!-- ZIM runs on the HTML Canvas powered by JavaScript and CreateJS https://createjs.com -->
+<!-- Founded by Inventor Dan Zen - https://danzen.com - Canadian New Media Award Winner 	-->
+<!-- ZIM is free to use. You can donate to help improve ZIM at https://zimjs.com/donate 	-->
+
+<script src="https://d309knd7es5f10.cloudfront.net/createjs_1.1_min.js"></script>
+<script src="https://d309knd7es5f10.cloudfront.net/zim_10.js"></script>
+<!-- use zimjs.com/distill for minified individual functions! -->
+
+<!-- physics libraries -->
+<script src="https://d309knd7es5f10.cloudfront.net/Box2dWeb-2.1.a.3.min.js"></script>
+<script src="https://d309knd7es5f10.cloudfront.net/physics_2.0.js"></script><!-- helper code for box2D -->
+
+<script>
+
+// SCALING OPTIONS
+// scaling can have values as follows with full being the default
+// "fit"	sets canvas and stage to dimensions and scales to fit inside window size
+// "outside"	sets canvas and stage to dimensions and scales to fit outside window size
+// "full"	sets stage to window size with no scaling
+// "tagID"	add canvas to HTML tag of ID - set to dimensions if provided - no scaling
+
+var scaling = "fit"; // this will resize to fit inside the screen dimensions
+var width = 1000;
+var height = 800;
+var color = light; // ZIM colors like green, blue, pink, faint, clear, etc. available globally
+var outerColor = dark; // any HTML colors like "violet", "#333", etc. fine to use\
+
+var assets = [{font:"poppins-bold", src:"/Poppins-Bold.ttf"}, {font:"poppins", src:"/Poppins-Light.ttf"}, "pattern275.png"];
+var path = "assets/";
+
+var frame = new Frame(scaling, width, height, color, outerColor, assets, path, new Waiter());
+
+
+frame.on("ready", function() {
+    zog("ready from ZIM Frame"); // logs in console (F12 - choose console)
+
+    var stage = frame.stage;
+    var stageW = frame.width;
+    var stageH = frame.height;
+
+    // see https://zimjs.com/learn.html for video and code tutorials
+    // see https://zimjs.com/docs.html for documentation
+    // see https://zimjs.com/bits.html for 64 Interactive Media techniques
+
+    // put your code here (you can delete this sample code)
+    var bg = frame.asset("pattern275.png").center();
+    var physics = new Physics(1);
+
+
+    var circle = new Circle(50, "#f21579");
+    // Boundary
+    var circleContainer = new Rectangle(stageW*.45,stageH*.25)
+          .centerReg()
+          .pos(stageW*0,stageH*.75)
+          .alp(.5);
+      var stopTop = new Rectangle(circleContainer.width,circleContainer.height*.10,"#26afff")
+          .centerReg()
+          .pos(stageW*0,stageH*.725)
+          .alp(0);
+      var stopRight = new Rectangle(circleContainer.width*.05,circleContainer.height,"#26afff")
+          .centerReg()
+          .pos(stageW*.45,stageH*.75)
+          .alp(0);
+
+      var circle = new Circle(50, "#f21579")
+          .center()
+          .pos(100,800)
+          .cur()
+          .addPhysics({restitution:1})
+          .impulse(50,25);
+
+      circle.physics.drag();
+      var mouseDown = false;
+      circle.on("pressmove",function () {
+          mouseDown = true;
+      })
+      circle.on("pressup",function () {
+          mouseDown = false;
+      })
+
+      var circleCheck = Ticker.add(function (obj) {
+          //max y = 717, min = 624
+          //max x = 412, min = 50
+          zog(mouseDown)
+          obj = circle.body;
+          if (obj.y < 645 && mouseDown == true) {
+              stopTop.alp(1).addPhysics(false);
+          }
+          else if(obj.y > 650 && mouseDown == false) {
+              stopTop.alp(0).removePhysics();
+          }
+          if (obj.x > 408 && mouseDown == true) {
+              stopRight.alp(1).addPhysics(false);
+          }
+          else if(obj.x < 408 && mouseDown == false) {
+              stopRight.alp(0).removePhysics();
+
+          }
+      });
+
+      var rect = new Rectangle(100,10,grey).centerReg().pos(500,600).addPhysics(false);
+      var square = new Rectangle(100,100,grey).centerReg().pos(750,300).addPhysics(false);
+      var circle2 = new Circle(50,grey).centerReg().pos(700,50).addPhysics(false);
+      var tri = new Triangle(100, 100, 100, "grey").centerReg().pos(500,150,true).addPhysics(false);
+
+      // TRY AGAIN BUTTON //
+      var againLabel = new Label({
+          text:"Try Again",
+          font:"poppins",
+          size:20,
+          color: white
+      });
+
+      var tryAgain = new Button({
+          width:125,
+          height:50,
+          label:againLabel,
+          backgroundColor: "#26afff",
+          rollBackgroundColor: "#59c1ff"
+      });
+      //
+
+      // LEVEL WIN MESSAGE //
+      var levelWin = new Label({
+          text:"You did it!",
+          font:"poppins-bold",
+          size:125,
+          color: "#e80642"
+      }).sca(0).alp(0);
+
+      var nextLabel = new Label({
+          text:"Next level",
+          font:"poppins",
+          size:40,
+          color: white
+      });
+
+      var next = new Button({
+          width:280,
+          height:80,
+          label:nextLabel,
+          backgroundColor: "#26afff",
+          rollBackgroundColor: "#59c1ff"
+      }).centerReg().mov(0,50).alp(0);
+      //
+
+      circle.contact(function (obj, body) {
+          if(obj == tri){
+                obj.color = "#ea3c19";
+                var triInt = interval(1500, function(){
+                  tri.color = grey;
+                  triInt.pause(true)
+                  zog("tri grey")
+                });
+            }
+            if(obj == square){
+                obj.color = "#4e9ffc";
+                var squareInt = interval(1500, function(){
+                  square.color = grey;
+                  squareInt.pause(true)
+                  zog("square grey")
+                });
+            }
+            if(obj == rect){
+                obj.color = "#4cd3ba";
+                var rectInt = interval(1500, function(){
+                  rect.color = grey;
+                  rectInt.pause(true)
+                  zog("rect grey")
+                  circle.impulse(2000,1400);
+                });
+            }
+
+            if(obj == circle2){
+                obj.color = "yellow";
+                var circle2Int = interval(1500, function(){
+                  circle2.color = grey;
+                  circle2Int.pause(true)
+                  zog("circle grey")
+                });
+            }
+            if(tri.color=="#ea3c19"&&square.color=="#4e9ffc"&&rect.color=="#4cd3ba"&&circle2.color=="yellow"){
+                // zog("WIN!!!!!!");
+              levelWin.centerReg().mov(0,-100);
+              levelWin.animate({
+                  props: {scale:1, alpha:1},
+                  time: 375,
+                  ease: "linear"
+              });
+
+              next.centerReg().mov(0,100);
+              next.animate({
+                  props: {alpha: 1},
+                  time: 800,
+                  ease: "linear",
+                  wait: 500
+              });
+            }
+        });
+
+    next.on("click", function(){
+        zgo("level3.html");
+    });
+
+    tryAgain.centerReg().pos(20,20, true, true);
+
+    tryAgain.on("click", function(){
+        zgo("level2.html")
+    });
+
+
+
+
+
+
+
+    physics.drag();
+
+
+
+    stage.update(); // this is needed to show any changes
+
+}); // end of ready
+
+</script>
+
+<meta name="viewport" content="width=device-width, user-scalable=no" />
+
+</head>
+
+<body>
+<!-- canvas with id="myCanvas" is made by zim Frame -->
+</body>
+</html>

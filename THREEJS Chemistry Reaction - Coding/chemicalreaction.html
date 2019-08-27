@@ -1,0 +1,545 @@
+<html>
+<head>
+	<meta charset="utf-8" />
+	<title>Elephant's Toothpaste | Chemical Reaction</title>
+
+	<link href="https://fonts.googleapis.com/css?family=Montserrat:500" rel="stylesheet">
+	<style>
+		body {margin:0px;background-color:#8FE5F7;}
+		canvas {width:100%; height:100%}
+
+		/*TEXT & BUTTON STYLING*/
+		body{
+			font-family: 'Montserrat', sans-serif;
+			color: #612FE0;
+			font-size: 35px;
+			text-align: center;
+		}
+
+		.formula{
+			padding: 10px;
+		}
+
+		.buttons{
+			display:flex;
+			justify-content:space-around;
+			padding-top: 10px;
+			padding-bottom: 10px;
+		}
+
+		button{
+			height:80px;
+			width:24%;
+			background-color:#612FE0;
+	  		border:none;
+	  		border-radius:12px;
+	  		font-size:20px;
+	  		color:#fff;
+		}
+
+		button:hover{background-color:#8453ff;}
+	</style>
+</head>
+
+<body>
+	<script src="http://d309knd7es5f10.cloudfront.net/zim_1.3.js"></script>
+	<script src="http://cdnjs.cloudflare.com/ajax/libs/three.js/r69/three.min.js"></script>
+	<script src="js/orbitControls.js"></script>
+	<!-- CHEMICAL REACTION BUTTONS -->
+	<div class="formula">
+		<span>H2O2 + IO- → I- + H2O + O2</span>
+	</div>
+
+	<div class="buttons">
+		<button type="button" id="soap">1. Dish Soap</button>
+		<button type="button" id="coloring">2. Food Coloring</button>
+		<button type="button" id="iodide">3. Potassium Iodide</button>
+		<button type="button" id="hydro">4. Hydrogen Peroxide</button>
+	</div>
+	
+	<script>
+	// SCENE
+	var scene = new THREE.Scene();
+
+	// CAMERA
+	var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+	camera.position.z = 25;
+	camera.position.y = -1;
+	camera.position.x = 1;
+
+	// RENDERER
+	var renderer = new THREE.WebGLRenderer({antialias:true});
+	renderer.setSize(window.innerWidth, window.innerHeight);
+	document.body.appendChild(renderer.domElement);
+
+	// LAB
+	var cubeMaterialArray = [];
+	var geometry = new THREE.BoxGeometry(100, 80, 100);
+	var picW = 800;
+	var picH = 1000;
+	var picTexture1 = new THREE.ImageUtils.loadTexture('images/1.jpg');
+	var picTexture2 = new THREE.ImageUtils.loadTexture('images/2.jpg');
+	var picTexture3 = new THREE.ImageUtils.loadTexture('images/3.jpg');
+	var picTexture4 = new THREE.ImageUtils.loadTexture('images/4.jpg');
+
+	cubeMaterialArray.push(new THREE.MeshBasicMaterial({map:picTexture4, side: THREE.DoubleSide}));
+	cubeMaterialArray.push(new THREE.MeshBasicMaterial({map:picTexture2, side: THREE.DoubleSide}));
+	cubeMaterialArray.push(new THREE.MeshBasicMaterial({color: 0xbcbaae, opacity:0.8, side: THREE.DoubleSide}));
+	cubeMaterialArray.push(new THREE.MeshBasicMaterial({color: 0xd7d3c8, opacity:0.8, side: THREE.DoubleSide}));
+	cubeMaterialArray.push(new THREE.MeshBasicMaterial({map:picTexture3, side: THREE.DoubleSide}));
+	cubeMaterialArray.push(new THREE.MeshBasicMaterial({map:picTexture1, side: THREE.DoubleSide}));
+
+	var material = new THREE.MeshFaceMaterial(cubeMaterialArray);
+	var cube = new THREE.Mesh(geometry, material);
+
+	scene.add(cube);
+
+	// FLASK
+	// material
+	var mat = new THREE.MeshPhongMaterial({color:0xffffff, opacity:.4, transparent:true, side: THREE.DoubleSide,depthWrite: false});
+	var liquidMat = new THREE.MeshPhongMaterial({color:0xffffff, opacity:.6, transparent:true, side: THREE.DoubleSide});
+
+	// base of flask
+	var base = new THREE.CylinderGeometry( .8, 3, 6, 40, 5);
+	var baseMesh = new THREE.Mesh(base, mat);
+	baseMesh.position.set(0,-3,0);
+	scene.add(baseMesh);
+
+	// liquid in flask
+	 // var liq = new THREE.CylinderGeometry(1.5, 2.8, 4, 40, 5);
+	 // var liqMesh = new THREE.Mesh(liq,liquidMat);
+	// liqMesh.position.set(0,-4,0);
+	// scene.add(liqMesh);
+
+	// neck of flask
+	var neck = new THREE.CylinderGeometry(.8, .8, 2,32);
+	var neckMesh = new THREE.Mesh(neck, mat);
+	neckMesh.position.set(0,1,0);
+	scene.add(neckMesh);
+
+
+
+	// INGREDIENT 1
+	// material
+	var mat2 = new THREE.MeshPhongMaterial({color:0xffffff, opacity:.4, transparent:true, side: THREE.DoubleSide,depthWrite: false});
+	var liquidMat2 = new THREE.MeshPhongMaterial({color:"brown", opacity:.6, transparent:true, side: THREE.DoubleSide});
+
+	// base of flask
+	var base2 = new THREE.CylinderGeometry( .8, 3, 6, 40, 5);
+	var baseMesh2 = new THREE.Mesh(base2, mat2);
+	baseMesh2.position.set(0,-3,0);
+	//scene.add(baseMesh2);
+
+	// liquid in flask
+	var liq2 = new THREE.CylinderGeometry(1.5, 2.8, 4, 40, 5);
+	var liqMesh2 = new THREE.Mesh(liq2,liquidMat2);
+	liqMesh2.position.set(0,-4,0);
+	//scene.add(liqMesh2);
+
+	// neck of flask
+	var neck2 = new THREE.CylinderGeometry(.8, .8, 2,32);
+	var neckMesh2 = new THREE.Mesh(neck2, mat2);
+	neckMesh2.position.set(0,1,0);
+	//scene.add(neckMesh2);
+
+	// Grouping all flask into 1 variable for animation ease of use
+	var ingFlask1 = new THREE.Group();
+	ingFlask1.add(baseMesh2);
+	ingFlask1.add(liqMesh2);
+	ingFlask1.add(neckMesh2);
+	ingFlask1.position.set(5,-3,0);
+	ingFlask1.scale.set(.5,.5,.5);
+	scene.add(ingFlask1);
+	// END INGREDIENT 1
+
+	// INGREDIENT 2
+	// material
+	var mat3 = new THREE.MeshPhongMaterial({color:0xffffff, opacity:.4, transparent:true, side: THREE.DoubleSide,depthWrite: false});
+	var liquidMat3 = new THREE.MeshPhongMaterial({color:"yellow", opacity:.6, transparent:true, side: THREE.DoubleSide});
+
+	// base of flask
+	var base3 = new THREE.CylinderGeometry( .8, 3, 6, 40, 5);
+	var baseMesh3 = new THREE.Mesh(base3, mat3);
+	baseMesh3.position.set(0,-3,0);
+	//scene.add(baseMesh2);
+
+	// liquid in flask
+	var liq3 = new THREE.CylinderGeometry(1.5, 2.8, 4, 40, 5);
+	var liqMesh3 = new THREE.Mesh(liq3,liquidMat3);
+	liqMesh3.position.set(0,-4,0);
+	//scene.add(liqMesh2);
+
+	// neck of flask
+	var neck3 = new THREE.CylinderGeometry(.8, .8, 2,32);
+	var neckMesh3 = new THREE.Mesh(neck3, mat3);
+	neckMesh3.position.set(0,1,0);
+	//scene.add(neckMesh2);
+
+	// Grouping all flask into 1 variable for animation ease of use
+	var ingFlask2 = new THREE.Group();
+	ingFlask2.add(baseMesh3);
+	ingFlask2.add(liqMesh3);
+	ingFlask2.add(neckMesh3);
+	ingFlask2.position.set(9,-3,0);
+	ingFlask2.scale.set(.5,.5,.5);
+	scene.add(ingFlask2);
+	// END INGREDIENT 2
+
+	// INGREDIENT 3
+	// material
+	var mat4 = new THREE.MeshPhongMaterial({color:0xffffff, opacity:.4, transparent:true, side: THREE.DoubleSide,depthWrite: false});
+	var liquidMat4 = new THREE.MeshPhongMaterial({color:"blue", opacity:.6, transparent:true, side: THREE.DoubleSide});
+
+	// base of flask
+	var base4 = new THREE.CylinderGeometry( .8, 3, 6, 40, 5);
+	var baseMesh4 = new THREE.Mesh(base4, mat4);
+	baseMesh4.position.set(0,-3,0);
+	//scene.add(baseMesh2);
+
+	// liquid in flask
+	var liq4 = new THREE.CylinderGeometry(1.5, 2.8, 4, 40, 5);
+	var liqMesh4 = new THREE.Mesh(liq4,liquidMat4);
+	liqMesh4.position.set(0,-4,0);
+	//scene.add(liqMesh2);
+
+	// neck of flask
+	var neck4 = new THREE.CylinderGeometry(.8, .8, 2,32);
+	var neckMesh4 = new THREE.Mesh(neck4, mat4);
+	neckMesh4.position.set(0,1,0);
+	//scene.add(neckMesh2);
+
+	// Grouping all flask into 1 variable for animation ease of use
+	var ingFlask3 = new THREE.Group();
+	ingFlask3.add(baseMesh4);
+	ingFlask3.add(liqMesh4);
+	ingFlask3.add(neckMesh4);
+	ingFlask3.position.set(-5,-3,0);
+	ingFlask3.scale.set(.5,.5,.5);
+	scene.add(ingFlask3);
+	// END INGREDIENT 3
+
+	// INGREDIENT 4
+	// material
+	var mat5 = new THREE.MeshPhongMaterial({color:0xffffff, opacity:.4, transparent:true, side: THREE.DoubleSide,depthWrite: false});
+	var liquidMat5 = new THREE.MeshPhongMaterial({color:0xFFF2CC, opacity:.6, transparent:true, side: THREE.DoubleSide});
+
+	// base of flask
+	var base5 = new THREE.CylinderGeometry( .8, 3, 6, 40, 5);
+	var baseMesh5 = new THREE.Mesh(base5, mat5);
+	baseMesh5.position.set(0,-3,0);
+	//scene.add(baseMesh2);
+
+	// liquid in flask
+	var liq5 = new THREE.CylinderGeometry(1.5, 2.8, 4, 40, 5);
+	var liqMesh5 = new THREE.Mesh(liq5,liquidMat5);
+	liqMesh5.position.set(0,-4,0);
+	//scene.add(liqMesh2);
+
+	// neck of flask
+	var neck5 = new THREE.CylinderGeometry(.8, .8, 2,32);
+	var neckMesh5 = new THREE.Mesh(neck5, mat5);
+	neckMesh5.position.set(0,1,0);
+	//scene.add(neckMesh2);
+
+	// Grouping all flask into 1 variable for animation ease of use
+	var ingFlask4 = new THREE.Group();
+	ingFlask4.add(baseMesh5);
+	ingFlask4.add(liqMesh5);
+	ingFlask4.add(neckMesh5);
+	ingFlask4.position.set(-9,-3,0);
+	ingFlask4.scale.set(.5,.5,.5);
+	scene.add(ingFlask4);
+	// END INGREDIENT 4
+
+	// liquid levels in main flask
+
+	liqlevel1 = new THREE.CylinderGeometry(2.6, 2.8, 1.2, 40, 5);
+	var liqMainMesh1 = new THREE.Mesh(liqlevel1,liquidMat);
+	liqMainMesh1.position.set(0,-5.5,0);
+
+	liqlevel2 = new THREE.CylinderGeometry(2.4, 2.78, 1.5, 40, 5);
+	var liqMainMesh2 = new THREE.Mesh(liqlevel2,liquidMat4);
+	liqMainMesh2.position.set(0,-5,0);
+
+	liqlevel3 = new THREE.CylinderGeometry(2, 2.8, 3, 40, 5);
+	var liqMainMesh3 = new THREE.Mesh(liqlevel3,liquidMat2);
+	liqMainMesh3.position.set(0,-4.5,0);
+
+	liqlevel4 = new THREE.CylinderGeometry(1.5, 2.8, 4, 40, 5);
+	var liqMainMesh4 = new THREE.Mesh(liqlevel4,liquidMat3);
+	liqMainMesh4.position.set(0,-4,0);
+
+
+	//Rection outcome mesh
+	var reaction = new THREE.CylinderGeometry(.6,.6,4,40,5);
+	var reaction2 = new THREE.CylinderGeometry(.6,.6,4,40,5);
+	var reaction3 = new THREE.CylinderGeometry(.6,.6,4,40,5);
+	var reaction4 = new THREE.CylinderGeometry(.6,.6,4,40,5);
+	var reaction5 = new THREE.CylinderGeometry(.6,.6,4,40,5);
+	var reaction6 = new THREE.CylinderGeometry(.6,.6,4,40,5);
+	var reaction7 = new THREE.CylinderGeometry(.6,.6,4,40,5);
+	var reactionMesh = new THREE.Mesh(reaction,liquidMat4);
+	var reactionMesh2 = new THREE.Mesh(reaction2,liquidMat2);
+	var reactionMesh3 = new THREE.Mesh(reaction3,liquidMat3);
+	var reactionMesh4 = new THREE.Mesh(reaction4,liquidMat4);
+	var reactionMesh5 = new THREE.Mesh(reaction5,liquidMat2);
+	var reactionMesh6 = new THREE.Mesh(reaction6,liquidMat3);
+	var reactionMesh7 = new THREE.Mesh(reaction7,liquidMat4);
+
+	reactionMesh.position.set(0,-5,0);
+	reactionMesh2.position.set(0,-5,0);
+	reactionMesh3.position.set(0,-5,0);
+	reactionMesh4.position.set(0,-5,0);
+	reactionMesh5.position.set(0,-5,0);
+	reactionMesh6.position.set(0,-5,0);
+	reactionMesh7.position.set(0,-5,0);
+
+	// TABLE
+	//table top
+	var table = new THREE.BoxGeometry(22,1, 13.5);
+	var tableMat = new THREE.MeshPhongMaterial({color:0x34312c});
+	var tableMesh = new THREE.Mesh(table,tableMat);
+
+	tableMesh.position.set(0,-6.3,0);
+	scene.add(tableMesh);
+
+	//legs
+	var leg = new THREE.BoxGeometry(1.5,10,1.5);
+	var legMat = new THREE.MeshPhongMaterial({color:0xd4d2c5});
+	var legMesh1 = new THREE.Mesh(leg,legMat);
+	var legMesh2 = new THREE.Mesh(leg,legMat);
+	var legMesh3 = new THREE.Mesh(leg,legMat);
+	var legMesh4 = new THREE.Mesh(leg,legMat);
+
+	legMesh1.position.set(10.2,-11.5,5.1);
+	legMesh2.position.set(-10.2,-11.5,-5.1);
+	legMesh3.position.set(-10.2,-11.5,5.1);
+	legMesh4.position.set(10.2,-11.5,- 5.1);
+
+	scene.add(legMesh1);
+	scene.add(legMesh2);
+	scene.add(legMesh3);
+	scene.add(legMesh4);
+
+	// LIGHT
+	var light = new THREE.PointLight(0xffffff);
+	light.position.set(100,250,225);
+	scene.add(light);
+
+	var light2 = new THREE.PointLight(0xffffff);
+	light.position.set(100,-250,225);
+	scene.add(light2);
+
+	// CONTROLS
+	var controls = new THREE.OrbitControls(camera, renderer.domElement);
+
+	// Variables for setting ingredient flasks to different points
+	var flask4PosX = -2;
+	var flask4PosY = 3.5;
+	var flask4Rot = -1.9;
+
+	var flask3PosX = -2;
+	var flask3PosY = 4.5;
+	var flask3Rot = -1.9;
+
+	var flask1PosX = 2;
+	var flask1PosY = 3.5;
+	var flask1Rot = 1.9;
+
+	var flask2PosX = 2;
+	var flask2PosY = 4.5;
+	var flask2Rot = 1.9;
+	//
+	// Variables for setting toothpaste  to different points
+	var toothpastePosInitial = -5;
+	var toothpastePosFinal = 4;
+	var toothpaste2 = 3;
+	var toothpaste3 = 2;
+	var toothpaste4 = 1;
+	var toothpaste5 = 0;
+	var toothpaste6 = -1;
+	var toothpaste7 = -2;
+
+
+
+	// Booleans to set via interactive/clickable objects/text
+	var soap = false;
+	var coloring = false;
+	var iodide = false;
+	var hydro = false; // if set to true, play the animation
+	//
+
+	//
+	var setSoap = document.getElementById('soap');
+	var setColoring = document.getElementById('coloring');
+	var setIodide = document.getElementById('iodide');
+	var setHydro = document.getElementById('hydro');
+	var buttons = [setSoap,setColoring,setIodide,setHydro];
+	for (var i = 0; i < buttons.length; i++) {
+		buttons[i].addEventListener('click',setFunction,false);
+	}
+	function setFunction(e) {
+		console.log(e);
+		if (e.target.id == "soap") {
+			soap = true;
+		}
+		if (e.target.id == "coloring") {
+			coloring = true;
+		}
+		if (e.target.id == "iodide") {
+			iodide = true;
+		}
+		if (e.target.id == "hydro") {
+			hydro = true;
+		}
+	}
+	//
+
+	// ANIMATION
+	function render() {
+
+		if (soap==true) {
+			if (ingFlask4.position.y < flask4PosY) {
+				ingFlask4.position.y += 0.05;
+			}
+			if (ingFlask4.position.x < flask4PosX) {
+				ingFlask4.position.x += 0.05;
+			}
+			if (ingFlask4.position.y>=flask4PosY) {
+				if (ingFlask4.rotation.z > flask4Rot) {
+					ingFlask4.rotation.z -= 0.02;
+					setTimeout(function()
+			    	{
+						ingFlask4.remove(liqMesh5);	
+						scene.add(liqMainMesh1);
+					},1500);
+				}
+			}
+		}
+
+		if (coloring==true) {
+			if (ingFlask3.position.y < flask3PosY) {
+				ingFlask3.position.y += 0.05;
+			}
+			if (ingFlask3.position.x < flask3PosX && ingFlask3.position.y > flask1PosY) {
+				ingFlask3.position.x += 0.05;
+			}
+			if (ingFlask3.position.y>=flask3PosY) {
+				if (ingFlask3.rotation.z > flask3Rot) {
+					ingFlask3.rotation.z -= 0.02;
+					// scene.remove(liqMesh4);
+					setTimeout(function()
+		    	{
+		    		ingFlask3.remove(liqMesh4);
+					scene.remove(liqMainMesh1);
+					scene.add(liqMainMesh2);
+		    	},1500);
+					
+					// function addMesh(mesh)
+					// 	{
+					// 	    setTimeout(function()
+					// 	    {
+					// 				scene.remove(liqMainMesh1);
+					// 				scene.add(liqMainMesh2);
+					// 	    },10000);
+					// 	}
+					// 	addMesh(mesh);
+
+				}
+			}
+		}
+
+		if (iodide==true) {
+			if (ingFlask1.position.y < flask1PosY) {
+				ingFlask1.position.y += 0.05;
+			}
+			if (ingFlask1.position.x > flask1PosX && ingFlask1.position.y > flask1PosY) {
+				ingFlask1.position.x -= 0.05;
+			}
+			if (ingFlask1.position.y>=flask1PosY) {
+				if (ingFlask1.rotation.z < flask1Rot) {
+					ingFlask1.rotation.z += 0.02;
+					
+					setTimeout(function()
+		    	{
+		    		ingFlask1.remove(liqMesh2);
+					scene.remove(liqMainMesh2);
+					scene.add(liqMainMesh3);
+		    	},1500);
+				}
+			}
+		}
+
+		if (hydro==true) {
+			if (ingFlask2.position.y < flask2PosY) {
+				ingFlask2.position.y += 0.05;
+			}
+			if (ingFlask2.position.x > flask2PosX) {
+				ingFlask2.position.x -= 0.05;
+			}
+			if (ingFlask2.position.y>=flask2PosY) {
+				if (ingFlask2.rotation.z < flask2Rot) {
+					ingFlask2.rotation.z += 0.02;
+					setTimeout(function()
+		    	{
+		    		ingFlask2.remove(liqMesh3);
+		    		scene.remove(liqMainMesh3);
+					scene.add(liqMainMesh4);
+		    	},1500);
+					
+				}
+			}
+		}
+
+		if (soap==true&&coloring==true&&iodide==true&&hydro==true) {
+			console.log("REACTION");
+
+
+				// scene.add(liqMesh);
+						setTimeout(function()
+		    {
+					scene.add(reactionMesh);
+					scene.add(reactionMesh2);
+					scene.add(reactionMesh3);
+					scene.add(reactionMesh4);
+					scene.add(reactionMesh5);
+					scene.add(reactionMesh6);
+					scene.add(reactionMesh7);
+
+					if (reactionMesh.position.y < toothpastePosFinal) {
+						reactionMesh.position.y += 0.10;
+					}
+					if (reactionMesh2.position.y < toothpaste2) {
+						reactionMesh2.position.y += 0.10;
+					}
+					if (reactionMesh3.position.y < toothpaste3) {
+						reactionMesh3.position.y += 0.10;
+					}
+					if (reactionMesh4.position.y < toothpaste4) {
+						reactionMesh4.position.y += 0.10;
+					}
+					if (reactionMesh5.position.y < toothpaste5) {
+						reactionMesh5.position.y += 0.10;
+					}
+					if (reactionMesh6.position.y < toothpaste6) {
+						reactionMesh6.position.y += 0.5;
+					}
+					if (reactionMesh7.position.y < toothpaste7) {
+						reactionMesh7.position.y += 0.5;
+					}
+
+		    },4000);
+
+
+
+		}
+
+
+		requestAnimationFrame(render);
+		renderer.render(scene, camera);
+	}
+	render();
+
+	</script>
+</body>
+</html>
